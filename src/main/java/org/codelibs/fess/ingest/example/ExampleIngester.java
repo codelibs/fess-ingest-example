@@ -28,8 +28,18 @@ import org.codelibs.fess.entity.DataStoreParams;
 import org.codelibs.fess.ingest.Ingester;
 import org.codelibs.fess.util.ComponentUtil;
 
+/**
+ * An example implementation of {@link Ingester} that logs crawled data.
+ */
 public class ExampleIngester extends Ingester {
     private static final Logger logger = LogManager.getLogger(ExampleIngester.class);
+
+    /**
+     * Default constructor.
+     */
+    public ExampleIngester() {
+        // nothing
+    }
 
     @Override
     public Map<String, Object> process(final Map<String, Object> target, final DataStoreParams params) {
@@ -48,6 +58,12 @@ public class ExampleIngester extends Ingester {
         return target;
     }
 
+    /**
+     * Logs the given data using the specified format.
+     *
+     * @param format the format string
+     * @param data the data to log
+     */
     protected void log(final String format, final Object data) {
         if (logger.isInfoEnabled()) {
             logger.info(String.format(format, data));
