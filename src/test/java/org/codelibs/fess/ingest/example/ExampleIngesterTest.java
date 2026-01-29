@@ -18,6 +18,8 @@ package org.codelibs.fess.ingest.example;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.TestInfo;
+
 import org.codelibs.fess.entity.DataStoreParams;
 import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.utflute.lastaflute.LastaFluteTestCase;
@@ -39,8 +41,8 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
     }
 
     @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    public void setUp(TestInfo testInfo) throws Exception {
+        super.setUp(testInfo);
         ingester = new ExampleIngester() {
             protected void log(final String format, final Object data) {
                 output = String.format(format, data);
@@ -49,9 +51,9 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
     }
 
     @Override
-    public void tearDown() throws Exception {
+    public void tearDown(TestInfo testInfo) throws Exception {
         ComponentUtil.setFessConfig(null);
-        super.tearDown();
+        super.tearDown(testInfo);
     }
 
     public void test_ds() {
