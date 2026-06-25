@@ -18,6 +18,7 @@ package org.codelibs.fess.ingest.example;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
 import org.codelibs.fess.entity.DataStoreParams;
@@ -56,6 +57,7 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
         super.tearDown(testInfo);
     }
 
+    @Test
     public void test_ds() {
         output = null;
         Map<String, Object> target = new HashMap<>();
@@ -65,6 +67,7 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
         assertEquals("DATASTORE CRAWL: {aaa=111}", output);
     }
 
+    @Test
     public void test_wf() {
         // TODO
         assertTrue(true);
