@@ -62,11 +62,18 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
     @Test
     public void test_ds() {
         output = null;
-        Map<String, Object> target = new HashMap<>();
-        DataStoreParams params = new DataStoreParams();
+        final Map<String, Object> target = new HashMap<>();
+        final DataStoreParams params = new DataStoreParams();
         target.put("aaa", "111");
-        ingester.process(target, params);
-        assertEquals("DATASTORE CRAWL: {aaa=111}", output);
+
+        final Map<String, Object> result = ingester.process(target, params);
+
+        // The same Map instance is mutated in place and returned.
+        assertTrue(target == result);
+        // The ingester enriches the document with its own marker field.
+        assertEquals(ExampleIngester.class.getSimpleName(), result.get(ExampleIngester.INGESTED_BY));
+        // The original field is preserved.
+        assertEquals("111", result.get("aaa"));
     }
 
     @Test

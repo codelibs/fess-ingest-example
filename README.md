@@ -6,10 +6,12 @@ Fess Ingest Example
 
 Fess Ingest Example is a sample project that demonstrates how to extend Fess's ingest functionality. This project serves as a template for creating custom ingesters that can process crawled data before it's indexed into the search engine.
 
-This sample implementation logs crawled data and handles two types of crawl results:
+This sample implementation enriches each crawled document with a marker field, logs it, and handles two types of crawl results:
 
 - **Data Store Crawl**: Data from databases, CSV files, etc.
 - **Web/File Crawl**: Content from websites and file systems
+
+It also demonstrates **ingester priority**: when multiple ingesters are registered, Fess runs them in priority order (lower number first), and each ingester receives the document already modified by the previous one. This example lowers its priority to `50` so it runs before ingesters that keep the default of `99`.
 
 ## What is a Fess Ingester?
 
@@ -45,12 +47,19 @@ import org.codelibs.fess.ingest.Ingester;
 
 public class ExampleIngester extends Ingester {
 
+    public ExampleIngester() {
+        // Optional: run before ingesters that keep the default priority (99).
+        // Lower numbers run first.
+        setPriority(50);
+    }
+
     // Process data from Data Store crawls (databases, CSV, etc.)
     @Override
     public Map<String, Object> process(final Map<String, Object> target,
                                        final DataStoreParams params) {
-        // Your custom processing logic here
-        // Example: Add custom fields, filter data, call external APIs
+        // Your custom processing logic here.
+        // Example: add custom fields, transform values, call external APIs.
+        // Mutate "target" in place and return it.
         target.put("custom_field", "custom_value");
         return target;
     }
@@ -59,8 +68,8 @@ public class ExampleIngester extends Ingester {
     @Override
     public ResultData process(final ResultData target,
                              final ResponseData responseData) {
-        // Your custom processing logic here
-        // Example: Extract specific content, enrich metadata
+        // Your custom processing logic here.
+        // Example: inspect responseData, enrich metadata, then return target.
         return target;
     }
 }
@@ -83,6 +92,28 @@ Create or edit `src/main/resources/fess_ingest++.xml`:
 ```
 
 The `<postConstruct name="register">` directive automatically registers your ingester with Fess.
+
+### Choosing What to Override
+
+`Ingester` exposes three public `process(...)` entry points, one per crawl type:
+
+- `process(Map<String, Object> target, DataStoreParams params)` - data store crawls
+- `process(Map<String, Object> target, AccessResult<String> accessResult)` - web/file crawls (map form)
+- `process(ResultData target, ResponseData responseData)` - web/file crawls (raw crawler result)
+
+The two `Map` overloads both delegate, by default, to a single protected hook:
+
+```java
+protected Map<String, Object> process(final Map<String, Object> target) {
+    return target;
+}
+```
+
+If you only need to enrich the document map and do not care which crawl produced it, **overriding this protected `process(Map)` is the simplest hook** - it covers both data store and web/file (map) crawls at once.
+
+### Ingester Priority
+
+Multiple ingesters can be registered at the same time. Fess runs them in **priority order**, where a **lower number runs first** (the default is `99`). Each ingester receives the document already modified by the previous one, so priority lets you control the order of enrichment steps. Set it via the constructor or `setPriority(int)`, or override `getPriority()`.
 
 ### Step 3: Build and Package
 
@@ -108,6 +139,7 @@ The `ExampleIngester` class in this project demonstrates:
 @Override
 public Map<String, Object> process(final Map<String, Object> target,
                                    final DataStoreParams params) {
+    target.put(INGESTED_BY, ExampleIngester.class.getSimpleName()); // enrich the document
     log("DATASTORE CRAWL: %s", target);
     return target;
 }
@@ -117,7 +149,8 @@ The `target` Map contains fields from your data source (database columns, CSV fi
 - Modify field values
 - Add new fields
 - Remove unwanted fields
-- Return `null` to skip indexing this document
+
+You must return the (possibly modified) `target`. The pipeline chains the returned value into the next ingester and then into the indexer **without a null check**, so returning `null` does **not** skip a document - it breaks indexing. There is no skip mechanism via the return value.
 
 ### Web/File Crawl Processing
 
@@ -160,18 +193,26 @@ public Map<String, Object> process(final Map<String, Object> target,
 }
 ```
 
-### 2. Filter Content
+### 2. Normalize or Redact Fields
 
 ```java
 public Map<String, Object> process(final Map<String, Object> target,
                                    final DataStoreParams params) {
-    // Skip documents that don't meet criteria
-    if (!target.containsKey("important_field")) {
-        return null; // This document will not be indexed
+    // Drop a field you do not want indexed
+    target.remove("internal_only_column");
+    // Normalize a value in place
+    final Object label = target.get("label");
+    if (label instanceof String) {
+        target.put("label", ((String) label).trim().toLowerCase());
     }
     return target;
 }
 ```
+
+> **Note:** An ingester cannot drop a whole document by returning `null` - the returned
+> value is added to the index list unchecked, so `null` causes errors rather than a skip.
+> To exclude documents, restrict the crawl configuration (e.g. URL/path filters or the
+> data store query) instead.
 
 ### 3. Send to External Systems
 
