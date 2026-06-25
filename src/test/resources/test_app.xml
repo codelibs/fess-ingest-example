@@ -9,4 +9,14 @@
 		class="org.codelibs.fess.crawler.entity.AccessResultImpl"
 		instance="prototype"></component>
 
+	<!-- Required so the TextTransformer below can resolve its @Resource CrawlerContainer. -->
+	<component name="crawlerContainer"
+		class="org.codelibs.fess.crawler.container.LastaCrawlerContainer"></component>
+
+	<component name="textTransformer"
+		class="org.codelibs.fess.crawler.transformer.impl.TextTransformer"
+		instance="singleton">
+		<property name="name">"textTransformer"</property>
+	</component>
+
 </components>

@@ -26,7 +26,7 @@ See [Maven Repository](https://repo1.maven.org/maven2/org/codelibs/fess/fess-ing
 
 ## Installation
 
-See [Plugin](https://fess.codelibs.org/15.3/admin/plugin-guide.html) of Administration guide.
+See [Plugin](https://fess.codelibs.org/15.7/admin/plugin-guide.html) of Administration guide.
 
 ## How to Implement Your Own Ingester
 
@@ -143,6 +143,8 @@ This method processes web pages and files. The `data` object contains the transf
 - `mimetype`: Content type
 - And more...
 
+> **Note:** The `accessResult`/`transformer` reconstruction above is only needed to *inspect* the transformed document (here, to log it). A typical ingester does not need it and can simply modify and return `target`.
+
 ## Use Cases
 
 Here are some practical examples of what you can do with a custom ingester:
@@ -245,4 +247,4 @@ Apache License 2.0
 
 - [Fess Documentation](https://fess.codelibs.org/)
 - [Fess GitHub Repository](https://github.com/codelibs/fess)
-- [Plugin Guide](https://fess.codelibs.org/15.3/admin/plugin-guide.html)
+- [Plugin Guide](https://fess.codelibs.org/15.7/admin/plugin-guide.html)
