@@ -18,8 +18,11 @@ package org.codelibs.fess.ingest.example;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
+import org.codelibs.fess.crawler.entity.ResponseData;
+import org.codelibs.fess.crawler.entity.ResultData;
 import org.codelibs.fess.entity.DataStoreParams;
 import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.utflute.lastaflute.LastaFluteTestCase;
@@ -56,6 +59,7 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
         super.tearDown(testInfo);
     }
 
+    @Test
     public void test_ds() {
         output = null;
         Map<String, Object> target = new HashMap<>();
@@ -65,8 +69,21 @@ public class ExampleIngesterTest extends LastaFluteTestCase {
         assertEquals("DATASTORE CRAWL: {aaa=111}", output);
     }
 
+    @Test
     public void test_wf() {
-        // TODO
-        assertTrue(true);
+        output = null;
+
+        final ResponseData responseData = new ResponseData();
+        responseData.setUrl("http://example.com/");
+        responseData.setSessionId("test-session");
+
+        final ResultData target = new ResultData();
+        target.setTransformerName("textTransformer");
+        target.setData("xyz".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        final ResultData result = ingester.process(target, responseData);
+
+        assertEquals(target, result);
+        assertEquals("WEB/FILE CRAWL: xyz", output);
     }
 }

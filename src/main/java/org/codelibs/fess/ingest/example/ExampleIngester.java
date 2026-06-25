@@ -43,12 +43,21 @@ public class ExampleIngester extends Ingester {
 
     @Override
     public Map<String, Object> process(final Map<String, Object> target, final DataStoreParams params) {
+        // This example only logs the crawled document. In a real ingester you can
+        // transform the document here before it is indexed, for example:
+        //   target.put("custom_field", "custom_value"); // add or overwrite a field
+        //   target.remove("unwanted_field");            // drop a field
+        //   return null;                                // skip indexing this document
         log("DATASTORE CRAWL: %s", target);
         return target;
     }
 
     @Override
     public ResultData process(final ResultData target, final ResponseData responseData) {
+        // For web/file crawls the document body is stored in the ResultData as raw
+        // bytes produced by a Transformer. The block below reconstructs the
+        // transformed document only so that it can be inspected and logged; a typical
+        // ingester does not need this and can simply modify and return "target".
         final AccessResult<?> accessResult = ComponentUtil.getComponent("accessResult");
         accessResult.init(responseData, target);
         final AccessResultData<?> accessResultData = accessResult.getAccessResultData();
